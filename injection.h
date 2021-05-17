@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <TlHelp32.h>
+#include <curl/curl.h>
 
 using f_LoadLibraryA	= HINSTANCE	(WINAPI*)(const char* lpLibFilename);
 using f_GetProcAddress	= UINT_PTR	(WINAPI*)(HINSTANCE hModule, const char* lpProcName);
