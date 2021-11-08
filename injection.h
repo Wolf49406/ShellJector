@@ -5,15 +5,20 @@
 #include <TlHelp32.h>
 #include <curl/curl.h>
 
-using f_LoadLibraryA	= HINSTANCE	(WINAPI*)(const char* lpLibFilename);
-using f_GetProcAddress	= UINT_PTR	(WINAPI*)(HINSTANCE hModule, const char* lpProcName);
-using f_DLL_ENTRY_POINT = BOOL		(WINAPI*)(void* hDLL, DWORD dwReason, void* pReserved);
+using f_LoadLibraryA = HINSTANCE(WINAPI*)(const char* lpLibFilename);
+using f_GetProcAddress = FARPROC(WINAPI*)(HMODULE hModule, LPCSTR lpProcName);
+using f_DLL_ENTRY_POINT = BOOL(WINAPI*)(void* hDll, DWORD dwReason, void* pReserved);
+using f_RtlAddFunctionTable = BOOL(WINAPIV*)(PRUNTIME_FUNCTION FunctionTable, DWORD EntryCount, DWORD64 BaseAddress);
 
-struct MANUAL_MAPPING_DATA
-{
-	f_LoadLibraryA		pLoadLibraryA;
-	f_GetProcAddress	pGetProcessAdress;
-	HINSTANCE			hMod;
+struct MANUAL_MAPPING_DATA {
+	f_LoadLibraryA pLoadLibraryA;
+	f_GetProcAddress pGetProcAddress;
+	f_RtlAddFunctionTable pRtlAddFunctionTable;
+	BYTE* pbase;
+	HINSTANCE hMod;
+	DWORD fdwReasonParam;
+	LPVOID reservedParam;
+	BOOL SEHSupport;
 };
 
 bool ManualMap(HANDLE hProc, const char* DllURL);
