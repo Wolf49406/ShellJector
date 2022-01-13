@@ -30,7 +30,7 @@ bool ManualMap(HANDLE hProc, const char* DllURL) {
 	CURLcode CURLresult = curl_easy_perform(curl);
 	curl_easy_cleanup(curl);
 	if (CURLresult != CURLE_OK) {
-		cout << "[-] Injection Error => [Can't get cheat DLL]" << endl;
+		std::cout << "[-] Injection Error => [Can't get cheat DLL]" << std::endl;
 		return false;
 	}
 
@@ -166,7 +166,7 @@ bool ManualMap(HANDLE hProc, const char* DllURL) {
 	VirtualFreeEx(hProc, pShellcode, 0, MEM_RELEASE);
 	VirtualFreeEx(hProc, MappingDataAlloc, 0, MEM_RELEASE);
 
-	cout << "[+] Injection => Ok" << endl;
+	std::cout << "[+] Injection => Ok" << std::endl;
 	return true;
 }
 
