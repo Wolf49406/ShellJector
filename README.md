@@ -1,4 +1,4 @@
-# ShellJector
+# ShellJector (v2.0)
 Manual map shellcode (aka byte array) injector wich can download DLL from the internet by URL
 
 ### Build:
