@@ -18,7 +18,32 @@ WriteMemoryCallback(void* contents, size_t size, size_t nmemb, void* userp) {
 	return realsize;
 }
 
+static int ProgressBar(void* ptr, double TotalToDownload, double NowDownloaded, double TotalToUpload, double NowUploaded) {
+	if (TotalToDownload <= 0.0)
+		return 0;
+
+	int totaldotz = 40;
+	double fractiondownloaded = NowDownloaded / TotalToDownload;
+	int dotz = (int)round(fractiondownloaded * totaldotz);
+	int ii = 0;
+
+	printf("%3.0f%% [", fractiondownloaded * 100);
+
+	for (; ii < dotz; ii++)
+		printf("=");
+
+	for (; ii < totaldotz; ii++)
+		printf(" ");
+
+	printf("]\r");
+	fflush(stdout);
+
+	return 0;
+}
+
 bool ManualMap(HANDLE hProc, const char* DllURL) {
+	printf("[DEBUG] Downloading library...\n");
+
 	struct MemoryStruct chunk;
 	chunk.memory = (char*)malloc(1);
 	chunk.size = 0;
@@ -26,13 +51,17 @@ bool ManualMap(HANDLE hProc, const char* DllURL) {
 	CURL* curl = curl_easy_init();
 	curl_easy_setopt(curl, CURLOPT_URL, DllURL);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+	curl_easy_setopt(curl, CURLOPT_NOPROGRESS, FALSE);
+	curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, ProgressBar);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&chunk);
 	CURLcode CURLresult = curl_easy_perform(curl);
 	curl_easy_cleanup(curl);
 	if (CURLresult != CURLE_OK) {
-		std::cout << "[-] Injection Error => [Can't get cheat DLL]" << std::endl;
+		printf("[-] CURLresult: %d\n", CURLresult);
 		return false;
 	}
+
+	printf("\n[DEBUG] Injecting...\n");
 
 	BYTE* pSrcData = reinterpret_cast<BYTE*>(chunk.memory);
 	IMAGE_NT_HEADERS* pOldNtHeader = nullptr;
@@ -40,16 +69,20 @@ bool ManualMap(HANDLE hProc, const char* DllURL) {
 	IMAGE_FILE_HEADER* pOldFileHeader = nullptr;
 	BYTE* pTargetBase = nullptr;
 
-	if (reinterpret_cast<IMAGE_DOS_HEADER*>(pSrcData)->e_magic != 0x5A4D)
+	if (reinterpret_cast<IMAGE_DOS_HEADER*>(pSrcData)->e_magic != 0x5A4D) {
+		printf("[-] e_magic != 0x5A4D\n");
 		return false;
+	}
 
 	pOldNtHeader = reinterpret_cast<IMAGE_NT_HEADERS*>(pSrcData + reinterpret_cast<IMAGE_DOS_HEADER*>(pSrcData)->e_lfanew);
 	pOldOptHeader = &pOldNtHeader->OptionalHeader;
 	pOldFileHeader = &pOldNtHeader->FileHeader;
 
 	pTargetBase = reinterpret_cast<BYTE*>(VirtualAllocEx(hProc, nullptr, pOldOptHeader->SizeOfImage, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
-	if (!pTargetBase)
+	if (!pTargetBase) {
+		printf("[-] VirtualAllocEx [1] Error: 0x%d\n", GetLastError());
 		return false;
+	}
 
 	DWORD oldp = 0;
 	VirtualProtectEx(hProc, pTargetBase, pOldOptHeader->SizeOfImage, PAGE_EXECUTE_READWRITE, &oldp);
@@ -65,6 +98,7 @@ bool ManualMap(HANDLE hProc, const char* DllURL) {
 
 	if (!WriteProcessMemory(hProc, pTargetBase, pSrcData, 0x1000, nullptr)) {
 		VirtualFreeEx(hProc, pTargetBase, 0, MEM_RELEASE);
+		printf("[-] WriteProcessMemory [1] Error: 0x%d\n", GetLastError());
 		return false;
 	}
 
@@ -73,6 +107,7 @@ bool ManualMap(HANDLE hProc, const char* DllURL) {
 		if (pSectionHeader->SizeOfRawData) {
 			if (!WriteProcessMemory(hProc, pTargetBase + pSectionHeader->VirtualAddress, pSrcData + pSectionHeader->PointerToRawData, pSectionHeader->SizeOfRawData, nullptr)) {
 				VirtualFreeEx(hProc, pTargetBase, 0, MEM_RELEASE);
+				printf("[-] WriteProcessMemory [2] Error: 0x%d\n", GetLastError());
 				return false;
 			}
 		}
@@ -81,12 +116,14 @@ bool ManualMap(HANDLE hProc, const char* DllURL) {
 	BYTE* MappingDataAlloc = reinterpret_cast<BYTE*>(VirtualAllocEx(hProc, nullptr, sizeof(MANUAL_MAPPING_DATA), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 	if (!MappingDataAlloc) {
 		VirtualFreeEx(hProc, pTargetBase, 0, MEM_RELEASE);
+		printf("[-] VirtualAllocEx [2] Error: 0x%d\n", GetLastError());
 		return false;
 	}
 
 	if (!WriteProcessMemory(hProc, MappingDataAlloc, &data, sizeof(MANUAL_MAPPING_DATA), nullptr)) {
 		VirtualFreeEx(hProc, pTargetBase, 0, MEM_RELEASE);
 		VirtualFreeEx(hProc, MappingDataAlloc, 0, MEM_RELEASE);
+		printf("[-] WriteProcessMemory [3] Error: 0x%d\n", GetLastError());
 		return false;
 	}
 
@@ -94,6 +131,7 @@ bool ManualMap(HANDLE hProc, const char* DllURL) {
 	if (!pShellcode) {
 		VirtualFreeEx(hProc, pTargetBase, 0, MEM_RELEASE);
 		VirtualFreeEx(hProc, MappingDataAlloc, 0, MEM_RELEASE);
+		printf("[-] VirtualAllocEx [3] Error: 0x%d\n", GetLastError());
 		return false;
 	}
 
@@ -101,6 +139,7 @@ bool ManualMap(HANDLE hProc, const char* DllURL) {
 		VirtualFreeEx(hProc, pTargetBase, 0, MEM_RELEASE);
 		VirtualFreeEx(hProc, MappingDataAlloc, 0, MEM_RELEASE);
 		VirtualFreeEx(hProc, pShellcode, 0, MEM_RELEASE);
+		printf("[-] WriteProcessMemory [4] Error: 0x%d\n", GetLastError());
 		return false;
 	}
 
@@ -109,6 +148,7 @@ bool ManualMap(HANDLE hProc, const char* DllURL) {
 		VirtualFreeEx(hProc, pTargetBase, 0, MEM_RELEASE);
 		VirtualFreeEx(hProc, MappingDataAlloc, 0, MEM_RELEASE);
 		VirtualFreeEx(hProc, pShellcode, 0, MEM_RELEASE);
+		printf("[-] CreateRemoteThread Error: 0x%d\n", GetLastError());
 		return false;
 	}
 	CloseHandle(hThread);
@@ -117,8 +157,10 @@ bool ManualMap(HANDLE hProc, const char* DllURL) {
 	while (!hCheck) {
 		DWORD exitcode = 0;
 		GetExitCodeProcess(hProc, &exitcode);
-		if (exitcode != STILL_ACTIVE)
+		if (exitcode != STILL_ACTIVE) {
+			printf("[-] GetExitCodeProcess != STILL_ACTIVE\n");
 			return false;
+		}
 
 		MANUAL_MAPPING_DATA data_checked{ 0 };
 		ReadProcessMemory(hProc, MappingDataAlloc, &data_checked, sizeof(data_checked), nullptr);
@@ -128,17 +170,20 @@ bool ManualMap(HANDLE hProc, const char* DllURL) {
 			VirtualFreeEx(hProc, pTargetBase, 0, MEM_RELEASE);
 			VirtualFreeEx(hProc, MappingDataAlloc, 0, MEM_RELEASE);
 			VirtualFreeEx(hProc, pShellcode, 0, MEM_RELEASE);
+			printf("[-] hCheck == 0x404040\n");
 			return false;
 		}
 
 		Sleep(10);
 	}
 
-	BYTE* emptyBuffer = (BYTE*)malloc(1024 * 1024 * 20);
-	if (emptyBuffer == nullptr)
+	BYTE* emptyBuffer = (BYTE*)malloc(1024 * 1024);
+	if (emptyBuffer == nullptr) {
+		printf("[-] emptyBuffer == nullptr\n");
 		return false;
+	}
 
-	memset(emptyBuffer, 0, 1024 * 1024 * 20);
+	memset(emptyBuffer, 0, 1024 * 1024);
 	WriteProcessMemory(hProc, pTargetBase, emptyBuffer, 0x1000, nullptr);
 
 	pSectionHeader = IMAGE_FIRST_SECTION(pOldNtHeader);
@@ -147,18 +192,14 @@ bool ManualMap(HANDLE hProc, const char* DllURL) {
 			DWORD old = 0;
 			DWORD newP = PAGE_READONLY;
 
-			if ((pSectionHeader->Characteristics & IMAGE_SCN_MEM_WRITE) > 0) {
+			if ((pSectionHeader->Characteristics & IMAGE_SCN_MEM_WRITE) > 0)
 				newP = PAGE_READWRITE;
-			}
-			else if ((pSectionHeader->Characteristics & IMAGE_SCN_MEM_EXECUTE) > 0) {
+			else if ((pSectionHeader->Characteristics & IMAGE_SCN_MEM_EXECUTE) > 0)
 				newP = PAGE_EXECUTE_READ;
-			}
-			if (VirtualProtectEx(hProc, pTargetBase + pSectionHeader->VirtualAddress, pSectionHeader->Misc.VirtualSize, newP, &old)) {
-			}
-			else {
-			}
+			VirtualProtectEx(hProc, pTargetBase + pSectionHeader->VirtualAddress, pSectionHeader->Misc.VirtualSize, newP, &old);
 		}
 	}
+
 	DWORD old = 0;
 	VirtualProtectEx(hProc, pTargetBase, IMAGE_FIRST_SECTION(pOldNtHeader)->VirtualAddress, PAGE_READONLY, &old);
 
@@ -166,7 +207,8 @@ bool ManualMap(HANDLE hProc, const char* DllURL) {
 	VirtualFreeEx(hProc, pShellcode, 0, MEM_RELEASE);
 	VirtualFreeEx(hProc, MappingDataAlloc, 0, MEM_RELEASE);
 
-	std::cout << "[+] Injection => Ok" << std::endl;
+	free(chunk.memory);
+
 	return true;
 }
 

