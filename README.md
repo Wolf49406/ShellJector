@@ -1,8 +1,7 @@
 # ShellJector (v2.0)
 Manual map shellcode (aka byte array) injector wich can download DLL from the internet by URL
 
-![build status](https://github.com/Wolf49406/ShellJector/actions/workflows/msbuild.yml/badge.svg)
-
+[![MSBuild](https://github.com/Wolf49406/ShellJector/actions/workflows/msbuild.yml/badge.svg?branch=main)](https://github.com/Wolf49406/ShellJector/actions/workflows/msbuild.yml)
 
 ### Build:
 - Open `ShellJector.sln -> main.cpp`;
