@@ -19,7 +19,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -35,7 +35,7 @@
     </LinkIncremental>
     <IncludePath>$(SolutionDir)Deps\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <LibraryPath>$(SolutionDir)Deps\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
-    <OutDir>$(MSBuildStartupDirectory)\Build\</OutDir>
+    <OutDir>Build\</OutDir>
     <IntDir>PB\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -62,6 +62,7 @@
   <ItemGroup>
     <ClCompile Include="injection.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Process.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="injection.h" />

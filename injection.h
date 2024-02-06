@@ -3,7 +3,9 @@
 #include <Windows.h>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 #include <TlHelp32.h>
+#include <comdef.h>
 #include <curl/curl.h>
 
 using f_LoadLibraryA = HINSTANCE(WINAPI*)(const char* lpLibFilename);
@@ -22,5 +24,12 @@ struct MANUAL_MAPPING_DATA {
 	BOOL SEHSupport;
 };
 
+struct MemoryStruct {
+	char* memory;
+	size_t size;
+};
+
 bool ManualMap(HANDLE hProc, const char* DllURL);
+int GetPIDByName(const char* ProcName);
+HANDLE OpenProc(const char* ProcName);
 void __stdcall Shellcode(MANUAL_MAPPING_DATA* pData);

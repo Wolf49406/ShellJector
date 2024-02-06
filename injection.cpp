@@ -1,10 +1,5 @@
 #include "injection.h"
 
-struct MemoryStruct {
-	char* memory;
-	size_t size;
-};
-
 static size_t
 WriteMemoryCallback(void* contents, size_t size, size_t nmemb, void* userp) {
 	size_t realsize = size * nmemb;
@@ -44,7 +39,7 @@ static int ProgressBar(void* ptr, double TotalToDownload, double NowDownloaded, 
 bool ManualMap(HANDLE hProc, const char* DllURL) {
 	printf("[DEBUG] Downloading library...\n");
 
-	struct MemoryStruct chunk;
+	struct MemoryStruct chunk {};
 	chunk.memory = (char*)malloc(1);
 	chunk.size = 0;
 
