@@ -9,7 +9,7 @@ Manual map shellcode (aka byte array) injector wich can download DLL from the in
 - Build;
 
 ## Usage:
-- Go to \ShellJector\Build\\`Configuration` (Release\Debug);
+- Go to \ShellJector\Build;
   - OR just download the [Latest Release](https://github.com/Wolf49406/ShellJector/releases/latest);
   - Set launch arguments (down below);
 - Open Target Process;
