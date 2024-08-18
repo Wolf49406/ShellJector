@@ -22,4 +22,7 @@ You can set `ProcName` and `DllURL` with `-proc` and `-url` arguments
 Arguments are case **sensitive**!
 
 ## Notice:
-ShellJector.exe will look for Payload.dll near itself!
+ShellJector.exe will look for Payload.dll near itself!  
+
+## Stargazers over time
+[![Stargazers over time](https://starchart.cc/Wolf49406/ShellJector.svg?variant=adaptive)](https://starchart.cc/Wolf49406/ShellJector)
