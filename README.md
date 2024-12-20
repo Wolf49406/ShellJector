@@ -21,8 +21,5 @@ You can set `ProcName` and `DllURL` with `-proc` and `-url` arguments
 (ex: `ShellJector.exe -proc explorer.exe -url "https://example.com/Payload.dll"`)  
 Arguments are case **sensitive**!
 
-## Notice:
-ShellJector.exe will look for Payload.dll near itself!  
-
 ## Stargazers over time
 [![Stargazers over time](https://starchart.cc/Wolf49406/ShellJector.svg?variant=adaptive)](https://starchart.cc/Wolf49406/ShellJector)
